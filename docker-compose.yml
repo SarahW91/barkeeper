@@ -77,14 +77,6 @@ services:
       - ./certbot/www/:/var/www/certbot/:rw
       - ./certbot/conf/:/etc/letsencrypt/:rw
 
-  mail:
-    image: boky/postfix:latest
-    environment:
-      ALLOWED_SENDER_DOMAINS: ${PROJECT_DOMAIN}
-    ports:
-      - '1578:578'
-    restart: always
-
 volumes:
   barkeeper-redis:
   barkeeper-postgres:
