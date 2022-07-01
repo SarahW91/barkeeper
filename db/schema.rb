@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_07_01_124803) do
+ActiveRecord::Schema.define(version: 2022_07_01_130550) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
@@ -444,7 +444,6 @@ ActiveRecord::Schema.define(version: 2022_07_01_124803) do
     t.integer "sequences_one_primer"
     t.integer "sequences_short"
     t.string "fastq_location"
-    t.boolean "analysis_requested", default: false
     t.boolean "analysis_started", default: false
     t.bigint "taxon_id"
     t.index ["isolate_id"], name: "index_ngs_runs_on_isolate_id"
