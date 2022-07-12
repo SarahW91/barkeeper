@@ -25,7 +25,7 @@
 class User < ApplicationRecord
   include ProjectRecord
 
-  devise :database_authenticatable, :rememberable, :timeoutable, :lockable
+  devise :database_authenticatable, :registerable, :rememberable, :timeoutable, :lockable, :validatable
 
   belongs_to :lab
   has_many :contig_searches

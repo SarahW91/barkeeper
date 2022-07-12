@@ -223,6 +223,7 @@ BarKeeper::Application.routes.draw do
     get '/login' => 'devise/sessions#new'
     get '/logout' => 'devise/sessions#destroy'
   end
+
   resources :users, controller: 'users' do
     member do
       get 'home'
