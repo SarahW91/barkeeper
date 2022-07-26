@@ -37,7 +37,7 @@ class Individual < ApplicationRecord
 
   validates_presence_of :specimen_id, message: "ID can't be blank"
 
-  after_save :import_abcd, if: :identifier_has_changed?
+  # after_save :import_abcd, if: :identifier_has_changed?
   after_save :update_isolate_tissue, if: :saved_change_to_tissue_id?
 
   multisearchable against: [:DNA_bank_id, :collector, :collectors_field_number, :comments, :country, :habitat,
