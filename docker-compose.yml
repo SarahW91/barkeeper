@@ -59,6 +59,7 @@ services:
         PORT: ${PORT}
         SSL_PORT: ${SSL_PORT}
         PUMA_PORT: ${PUMA_PORT}
+        RAILS_ENV: ${RAILS_ENV}
     depends_on:
       - app
     env_file:
