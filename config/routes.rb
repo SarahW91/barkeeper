@@ -62,7 +62,7 @@ BarKeeper::Application.routes.draw do
 
   resources :clusters
 
-  resources :herbaria
+  resources :collections
 
   resources :contigs do
     collection do

@@ -67,7 +67,7 @@ class Isolate < ApplicationRecord
 
       isolate.dna_bank_id = row['DNA Bank No.'] if row['DNA Bank No.']
 
-      isolate.tissue_id = 2 # Seems to be always "Leaf (Herbarium)", so no import needed
+      isolate.tissue_id = 2 # Seems to be always "Leaf (Collection)", so no import needed
 
       isolate.negative_control = true if row['Tissue Type'] == 'control'
 
@@ -82,7 +82,6 @@ class Isolate < ApplicationRecord
       individual = Individual.find_or_create_by(specimen_id: individual) # Assign to existing or new individual
 
       individual.collector = row['Collector']
-      individual.herbarium = row['Herbarium']
       individual.country = row['Country']
       individual.state_province = row['State/Province']
       individual.locality = row['Locality']
@@ -96,7 +95,7 @@ class Isolate < ApplicationRecord
       individual.substrate = row['Substrate']
       individual.life_form = row['Life form']
       individual.collectors_field_number = row['Collection number']
-      individual.collection_date = row['Date']
+      individual.collection_date = row['Date'] # String column for original/verbatim value
       begin
         individual.collected = Date.parse(row['Date']) if row['Date']
       end
@@ -104,6 +103,10 @@ class Isolate < ApplicationRecord
       individual.revision = row['Revision']
       individual.confirmation = row['Confirmation']
       individual.comments = row['Comments']
+
+      collection = Collection.find_by(name: row['Collection'])
+      collection ||= Collection.find_by(acronym: row['Collection'])
+      individual.collection = collection if collection
 
       if row['Genus'] && row['Species']
         if row['Subspecies']

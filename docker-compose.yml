@@ -57,7 +57,6 @@ services:
       args:
         PROJECT_DOMAIN: ${PROJECT_DOMAIN}
         PORT: ${PORT}
-        SSL_PORT: ${SSL_PORT}
         PUMA_PORT: ${PUMA_PORT}
         RAILS_ENV: ${RAILS_ENV}
     depends_on:
@@ -66,10 +65,6 @@ services:
       - .env
     ports:
       - ${PORT}:${PORT}
-      - ${SSL_PORT}:${SSL_PORT}
-    volumes:
-      - ./certbot/www:/var/www/certbot/:ro
-      - ./certbot/conf/:/etc/nginx/ssl/:ro
     restart: always
 
   certbot:
