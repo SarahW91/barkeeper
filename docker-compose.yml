@@ -58,6 +58,7 @@ services:
         PROJECT_DOMAIN: ${PROJECT_DOMAIN}
         PORT: ${PORT}
         PUMA_PORT: ${PUMA_PORT}
+        RAILS_ENV: ${RAILS_ENV}
     depends_on:
       - app
     env_file:
@@ -66,13 +67,11 @@ services:
       - ${PORT}:${PORT}
     restart: always
 
-  mail:
-    image: boky/postfix:latest
-    environment:
-      ALLOWED_SENDER_DOMAINS: ${PROJECT_DOMAIN}
-    ports:
-      - '1578:578'
-    restart: always
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw
 
 volumes:
   barkeeper-redis:

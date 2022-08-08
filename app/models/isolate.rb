@@ -42,7 +42,7 @@ class Isolate < ApplicationRecord
   validates :display_name, presence: { message: "Either a DNA Bank Number or a lab isolation number must be provided!" }
   before_validation :assign_display_name
 
-  after_save :assign_specimen
+  # after_save :assign_specimen
 
   multisearchable against: [:display_name, :dna_bank_id, :lab_isolation_nr]
 

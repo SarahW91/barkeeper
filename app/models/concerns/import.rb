@@ -36,45 +36,46 @@ module Import
     end
   end
 
-  def query_dna_bank(id, data_source = 'dna_bank')
-    query_id = id
-
-    if id.downcase.include? 'db'
-      id_parts = id.match(/^([A-Za-z]+)[\s_]?([0-9]+)$/)
-      query_id = id_parts ? "#{id_parts[1]} #{id_parts[2]}" : id # Ensure a space between 'DB' and the ID number
-    end
-
-    service_url = "http://ww3.bgbm.org/biocase/pywrapper.cgi?dsa=#{data_source}&query=<?xml version='1.0' encoding='UTF-8'?>
-<request xmlns='http://www.biocase.org/schemas/protocol/1.3'><header><type>search</type></header><search>
-<requestFormat>http://www.tdwg.org/schemas/abcd/2.1</requestFormat>
-<responseFormat start='0' limit='200'>http://www.tdwg.org/schemas/abcd/2.1</responseFormat><filter>
-<like path='/DataSets/DataSet/Units/Unit/UnitID'>#{query_id}</like></filter><count>false</count></search></request>"
-
-    url = URI.parse(service_url)
-    req = Net::HTTP::Get.new(url.to_s)
-    res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
-    doc = Nokogiri::XML(res.body)
-
-    search_hits = doc.at_xpath('//biocase:content').attributes['totalSearchHits'].value.to_i
-
-    results = {}
-
-    if search_hits > 0
-      unit = doc.at_xpath('//abcd21:Unit')
-      results[:unit_id] = doc.at_xpath('//abcd21:Unit/abcd21:UnitID')&.content&.strip
-      results[:specimen_unit_id] = unit.at_xpath('//abcd21:UnitAssociation/abcd21:UnitID')&.content&.strip
-      results[:genus] = unit.at_xpath('//abcd21:GenusOrMonomial')&.content&.strip
-      results[:species_epithet] = unit.at_xpath('//abcd21:FirstEpithet')&.content&.strip
-      results[:infraspecific] = unit.at_xpath('//abcd21:InfraspecificEpithet')&.content&.strip
-      results[:collection] = unit.at_xpath('//abcd21:SourceInstitutionCode')&.content&.strip
-      results[:collector] = unit.at_xpath('//abcd21:GatheringAgent')&.content&.strip
-      results[:locality] = unit.at_xpath('//abcd21:LocalityText')&.content&.strip
-      results[:longitude] = unit.at_xpath('//abcd21:LongitudeDecimal')&.content&.strip
-      results[:latitude] = unit.at_xpath('//abcd21:LatitudeDecimal')&.content&.strip
-      results[:higher_taxon_rank] = unit.at_xpath('//abcd21:HigherTaxonRank')&.content&.strip
-      results[:higher_taxon_name] = unit.at_xpath('//abcd21:HigherTaxonName')&.content&.strip
-    end
-
-    results
-  end
+  # Does not work on ESPE server
+#   def query_dna_bank(id, data_source = 'dna_bank')
+#     query_id = id
+#
+#     if id.downcase.include? 'db'
+#       id_parts = id.match(/^([A-Za-z]+)[\s_]?([0-9]+)$/)
+#       query_id = id_parts ? "#{id_parts[1]} #{id_parts[2]}" : id # Ensure a space between 'DB' and the ID number
+#     end
+#
+#     service_url = "http://ww3.bgbm.org/biocase/pywrapper.cgi?dsa=#{data_source}&query=<?xml version='1.0' encoding='UTF-8'?>
+# <request xmlns='http://www.biocase.org/schemas/protocol/1.3'><header><type>search</type></header><search>
+# <requestFormat>http://www.tdwg.org/schemas/abcd/2.1</requestFormat>
+# <responseFormat start='0' limit='200'>http://www.tdwg.org/schemas/abcd/2.1</responseFormat><filter>
+# <like path='/DataSets/DataSet/Units/Unit/UnitID'>#{query_id}</like></filter><count>false</count></search></request>"
+#
+#     url = URI.parse(service_url)
+#     req = Net::HTTP::Get.new(url.to_s)
+#     res = Net::HTTP.start(url.host, url.port) { |http| http.request(req) }
+#     doc = Nokogiri::XML(res.body)
+#
+#     search_hits = doc.at_xpath('//biocase:content').attributes['totalSearchHits'].value.to_i
+#
+#     results = {}
+#
+#     if search_hits > 0
+#       unit = doc.at_xpath('//abcd21:Unit')
+#       results[:unit_id] = doc.at_xpath('//abcd21:Unit/abcd21:UnitID')&.content&.strip
+#       results[:specimen_unit_id] = unit.at_xpath('//abcd21:UnitAssociation/abcd21:UnitID')&.content&.strip
+#       results[:genus] = unit.at_xpath('//abcd21:GenusOrMonomial')&.content&.strip
+#       results[:species_epithet] = unit.at_xpath('//abcd21:FirstEpithet')&.content&.strip
+#       results[:infraspecific] = unit.at_xpath('//abcd21:InfraspecificEpithet')&.content&.strip
+#       results[:herbarium] = unit.at_xpath('//abcd21:SourceInstitutionCode')&.content&.strip
+#       results[:collector] = unit.at_xpath('//abcd21:GatheringAgent')&.content&.strip
+#       results[:locality] = unit.at_xpath('//abcd21:LocalityText')&.content&.strip
+#       results[:longitude] = unit.at_xpath('//abcd21:LongitudeDecimal')&.content&.strip
+#       results[:latitude] = unit.at_xpath('//abcd21:LatitudeDecimal')&.content&.strip
+#       results[:higher_taxon_rank] = unit.at_xpath('//abcd21:HigherTaxonRank')&.content&.strip
+#       results[:higher_taxon_name] = unit.at_xpath('//abcd21:HigherTaxonName')&.content&.strip
+#     end
+#
+#     results
+#   end
 end

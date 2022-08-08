@@ -33,7 +33,7 @@ Rails.application.configure do
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
 
-  config.action_mailer.perform_caching = false
+  config.action_mailer.perform_deliveries = false
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
@@ -65,12 +65,4 @@ Rails.application.configure do
     Bullet.bullet_logger = true
     Bullet.rails_logger = true
   end
-
-  config.action_mailer.default_url_options = { host: 'localhost', port: 3000 } # Necessary for Devise mails
-  config.action_mailer.delivery_method = :smtp
-  config.action_mailer.smtp_settings = {
-    :address => 'mail',
-    :port => 25,
-    :openssl_verify_mode => 'none'
-  }
 end
