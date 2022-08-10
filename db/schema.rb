@@ -10,7 +10,6 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-
 ActiveRecord::Schema.define(version: 2022_08_05_113213) do
 
   # These are extensions that must be enabled in order to support this database
@@ -210,6 +209,7 @@ ActiveRecord::Schema.define(version: 2022_08_05_113213) do
     t.text "locality"
     t.string "latitude_original", limit: 255
     t.string "longitude_original", limit: 255
+    t.string "elevation_orig", limit: 255
     t.string "exposition", limit: 255
     t.text "habitat"
     t.string "substrate", limit: 255
@@ -226,7 +226,6 @@ ActiveRecord::Schema.define(version: 2022_08_05_113213) do
     t.integer "collection_id"
     t.integer "tissue_id"
     t.bigint "taxon_id"
-    t.string "elevation_orig"
     t.decimal "elevation"
     t.index ["collection_id"], name: "index_individuals_on_collection_id"
     t.index ["taxon_id"], name: "index_individuals_on_taxon_id"
