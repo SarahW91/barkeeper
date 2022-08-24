@@ -110,7 +110,7 @@ class Contig < ApplicationRecord
       identifier = sequence_comments.keys[index]
       comment = sequence_comments[identifier]
 
-      identifier_components = identifier.match(/(.+)_(.+)/)
+      identifier_components = identifier.match(/(.+)_(.+)/) # Identifiers need to follow the pattern <isolate_name>_<sequence_name>
 
       if identifier_components # Only sequences with an isolate name
         isolate_identifier = identifier_components[1]
