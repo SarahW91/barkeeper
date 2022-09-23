@@ -33,8 +33,9 @@ module ApplicationHelper
       styles += "class=\"about_page\" "
 
       home = Home.where(active: true).first
-      if home.background_image.attached?
-        styles += "style=\"background: url(#{url_for(home.background_image)}) repeat center fixed; background-size: cover; background-color: #101010;\""
+      if home.background_images.attached?
+        background = home.background_images.sample
+        styles += "style=\"background: url(#{url_for(background)}) repeat center fixed; background-size: cover; background-color: #101010;\""
       else
         styles += "style=\"background-color: #101010;\""
       end

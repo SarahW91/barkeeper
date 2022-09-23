@@ -24,8 +24,8 @@ class Home < ApplicationRecord
   has_many :logos, dependent: :destroy
   belongs_to :main_logo, class_name: 'Logo', foreign_key: :main_logo_id, dependent: :destroy
 
-  has_one_attached :background_image
-  validates :background_image, content_type: [:jpg, :png, :svg]
+  has_many_attached :background_images
+  validates :background_images, content_type: [:jpg, :png, :svg], limit: { min: 0, max: 5 }
 
   validates_presence_of :title
   validates_length_of :logos, :maximum => 12, message: 'You can only add a maximum of 12 logos'
@@ -37,9 +37,5 @@ class Home < ApplicationRecord
   def set_main_logo
     Logo.update_all(main: false)
     main_logo.update(main: true) if main_logo
-  end
-
-  def remove_background_image_attachment
-    self.background_image.purge
   end
 end

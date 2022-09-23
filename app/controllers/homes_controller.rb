@@ -76,7 +76,8 @@ class HomesController < ApplicationController
   def delete_background_image
     authorize! :delete_background_image, :home
 
-    @home.remove_background_image_attachment
+    @background_image = ActiveStorage::Attachment.find(params[:background_image_id])
+    @background_image.purge
     redirect_back(fallback_location: root_path)
   end
 
@@ -87,7 +88,8 @@ class HomesController < ApplicationController
   end
 
   def home_params
-    params.require(:home).permit(:description, :subtitle, :title, :background_image, :main_logo_id,
-                                 logos_attributes: [:title, :url, :image, :display, :display_pos_index, :_destroy, :id])
+    params.require(:home).permit(:description, :subtitle, :title, :main_logo_id,
+                                 logos_attributes: [:title, :url, :image, :display, :display_pos_index, :_destroy, :id],
+                                 background_images: [])
   end
 end
