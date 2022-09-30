@@ -26,22 +26,24 @@ module ApplicationHelper
   require 'net/http'
   require 'nokogiri'
 
-  def background_image_style(about_page)
-    styles = +''
-
+  def background_image_div(about_page)
     if about_page
+      html = +""
+      style = +''
+
       home = Home.where(active: true).first
+
       if home.background_images.attached?
         background = home.background_images.sample
-        styles += "style=\"background: url(#{url_for(background)}) repeat center fixed; background-size: cover; background-color: #101010;\""
+        style += "background: url(#{url_for(background)}) repeat center fixed; background-size: cover; background-color: #222;"
       else
-        styles += "style=\"background-color: #101010;\""
+        style += "background-color: #222;"
       end
-    else
-      styles += "class=\"\""
     end
 
-    styles.html_safe
+    html << tag.div(id: "background-helper-div", style: style, data: { home_id: home.id })
+
+    html.html_safe
   end
 
   def current_project_name

@@ -21,34 +21,46 @@
  */
 
 jQuery(function() {
-    $.ajax({
-        type: "GET",
-        contentType: "application/json; charset=utf-8",
-        url: 'homes/1/background_image_urls', // This will break if there is ever more than the one "Home" record
-        dataType: 'json',
-        success: function (data) {
-            var images = [];
+    var body = $('#page_body');
+    var helper_div = $("#background-helper-div");
 
-            for(var i in data) {
-                images.push([data[i]]);
+    if (helper_div != null) {
+        var home_id = helper_div.data('home-id');
+
+        $.ajax({
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            url: 'homes/' + home_id + '/background_image_urls',
+            dataType: 'json',
+            success: function (data) {
+                var images = [];
+
+                for(var i in data) {
+                    images.push([data[i]]);
+                }
+
+                rotateBackgrounds(data);
+            },
+            error: function (_result) {
+                console.error("Error getting data.");
             }
-
-            rotateBackgrounds(data);
-        },
-        error: function (_result) {
-            console.error("Error getting data.");
-        }
-    });
+        });
+    }
+    else {
+        body.css('background-color', '#ededed');
+    }
 
     function rotateBackgrounds(background_image_urls) {
         var index = 0;
         var image_div = $('#background-helper-div');
 
+        body.css('background-color', '#222');
+
         setInterval(function () {
-            image_div.animate({opacity: 0}, 500, function () {
+            image_div.animate({opacity: 0}, 600, function () {
                 image_div.css('background-image', 'url(' + background_image_urls[index] + ')');
                 index++;
-                image_div.animate({opacity: 1}, 1000, function () {
+                image_div.animate({opacity: 1}, 600, function () {
                     if (index == background_image_urls.length) index = 0;
                 });
             });

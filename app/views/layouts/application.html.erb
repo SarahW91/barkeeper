@@ -13,11 +13,8 @@
 
   </head>
 
-  <body>
-    <% if @about_page %>
-      <div id='background-helper-div' <%= background_image_style(@about_page) %>></div>
-    <% end %>
-
+  <body id="page_body">
+    <%= background_image_div(@about_page) %>
 
     <div class="sk-circle">
       <div class="sk-circle1 sk-child"></div>
