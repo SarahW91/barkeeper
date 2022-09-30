@@ -24,7 +24,7 @@ jQuery(function() {
     $.ajax({
         type: "GET",
         contentType: "application/json; charset=utf-8",
-        url: 'homes/1/background_image_urls',
+        url: 'homes/1/background_image_urls', // This will break if there is ever more than the one "Home" record
         dataType: 'json',
         success: function (data) {
             var images = [];
