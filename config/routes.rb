@@ -23,6 +23,7 @@ BarKeeper::Application.routes.draw do
   resources :homes do
     member do
       delete :delete_background_image
+      get :background_image_urls
     end
 
     collection do

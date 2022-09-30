@@ -41,7 +41,6 @@ class HomesController < ApplicationController
   end
 
   def documentation
-    @about_page = true
     authorize! :documentation, :home
   end
 
@@ -79,6 +78,12 @@ class HomesController < ApplicationController
     @background_image = ActiveStorage::Attachment.find(params[:background_image_id])
     @background_image.purge
     redirect_back(fallback_location: root_path)
+  end
+
+  def background_image_urls
+    authorize! :background_image_urls, :home
+
+    render json: Home.where(active: true).first.background_images.map{ |image| url_for(image) }
   end
 
   private

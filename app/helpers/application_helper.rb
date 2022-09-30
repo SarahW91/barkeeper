@@ -26,12 +26,10 @@ module ApplicationHelper
   require 'net/http'
   require 'nokogiri'
 
-  def about_page_style(about_page)
+  def background_image_style(about_page)
     styles = +''
 
     if about_page
-      styles += "class=\"about_page\" "
-
       home = Home.where(active: true).first
       if home.background_images.attached?
         background = home.background_images.sample
