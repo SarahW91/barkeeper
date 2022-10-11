@@ -25,7 +25,7 @@ jQuery(function() {
     var helper_div = document.getElementById("background-helper-div");
 
     if (helper_div != null) {
-        var home_id = helper_div.data('home-id');
+        var home_id = $('#background-helper-div').data('home-id');
 
         $.ajax({
             type: "GET",
