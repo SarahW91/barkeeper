@@ -27,10 +27,10 @@ module ApplicationHelper
   require 'nokogiri'
 
   def background_image_div(about_page)
-    if about_page
-      html = +""
-      style = +''
+    html = +""
 
+    if about_page
+      style = +''
       home = Home.where(active: true).first
 
       if home.background_images.attached?
@@ -39,9 +39,9 @@ module ApplicationHelper
       else
         style += "background-color: #222;"
       end
-    end
 
-    html << tag.div(id: "background-helper-div", style: style, data: { home_id: home.id })
+      html << tag.div(id: "background-helper-div", style: style, data: { home_id: home.id })
+    end
 
     html.html_safe
   end

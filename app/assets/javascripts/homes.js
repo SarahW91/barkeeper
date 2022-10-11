@@ -22,7 +22,7 @@
 
 jQuery(function() {
     var body = $('#page_body');
-    var helper_div = $("#background-helper-div");
+    var helper_div = document.getElementById("background-helper-div");
 
     if (helper_div != null) {
         var home_id = helper_div.data('home-id');
