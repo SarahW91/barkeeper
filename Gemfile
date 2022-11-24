@@ -13,7 +13,7 @@ gem 'pg_search'
 # Web server and background processing
 gem 'puma'
 gem 'redis-rails'
-gem 'sidekiq'
+gem 'sidekiq', '<7'
 gem 'sidekiq-client-cli'
 gem 'sidekiq-limit_fetch'
 gem 'sinatra', require: false # Needed to monitor sidekiq jobs
