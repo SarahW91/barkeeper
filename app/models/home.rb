@@ -25,7 +25,7 @@ class Home < ApplicationRecord
   belongs_to :main_logo, class_name: 'Logo', foreign_key: :main_logo_id, dependent: :destroy
 
   has_many_attached :background_images
-  validates :background_images, content_type: [:jpg, :png, :svg], limit: { min: 0, max: 5 }
+  validates :background_images, content_type: [:jpg, :png, :svg], limit: { min: 0, max: 5 }, size: { less_than: 1.megabytes , message: 'is too large. Please upload an image with a filesize < 1MB' }
 
   validates_presence_of :title
   validates_length_of :logos, :maximum => 12, message: 'You can only add a maximum of 12 logos'
