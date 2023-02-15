@@ -5,15 +5,13 @@ BarKeeper::Application.routes.draw do
 
   match 'about', to: 'homes#about', via: 'get'
   match 'documentation', to: 'homes#documentation', via: 'get'
-  match 'impressum', to: 'homes#impressum', via: 'get'
+  match 'legal_disclosure', to: 'homes#legal_disclosure', via: 'get'
   match 'privacy_policy', to: 'homes#privacy_policy', via: 'get'
 
   match 'progress', to: 'homes#progress', via: 'get'
   get 'progress_overview/index'
   get 'progress_overview/export_progress_csv'
   get 'progress_overview/progress_tree', defaults: { format: 'json' }
-
-  get 'reads_without_contigs', action: :reads_without_contigs, controller: 'primer_reads'
 
   get 'partial_cons/:id/:page/:width_in_bases', action: :show_page, controller: 'partial_cons', defaults: { format: 'json' }
   get 'partial_cons_pos/:id/:position/:width_in_bases', action: :show_position, controller: 'partial_cons', defaults: { format: 'json' }
@@ -113,6 +111,8 @@ BarKeeper::Application.routes.draw do
       post :import
       post :batch_create
       get 'duplicates'
+      get 'with_issues'
+      get 'without_contigs'
     end
 
     member do
@@ -129,9 +129,11 @@ BarKeeper::Application.routes.draw do
     end
   end
 
-  resources :txt_uploaders
-
-  resources :issues
+  resources :issues do
+    member do
+      get :solve
+    end
+  end
 
   resources :taxa do
     member do

@@ -16,6 +16,7 @@
       <li class="active"><a href="#assembly" role="tab" data-toggle="tab">Assembly</a></li>
       <li><a href="#downloads" role="tab" data-toggle="tab">Downloads</a></li>
       <%= render :partial => 'shared/sativa_nav_tab', :locals => { :marker_sequences => [@contig.marker_sequence] } %>
+      <%= render :partial => 'shared/issue_nav_tab', :locals => { :record => @contig } %>
     </ul>
 
     <!-- Tab panes -->
@@ -104,7 +105,8 @@
 
                 <%= content_tag 'a', class: 'anchor', id: "read_view_#{read.id}" do %><% end %>
                 <%= content_tag 'div', id: "primer_read_#{read.id}_view", style: 'display: none' do %>
-                    <hr>
+
+                    <br>
 
                     <!-- Display primer read name and toggle icon -->
                     <div>
@@ -193,7 +195,7 @@
 
         <!-- end of primer read views-->
 
-        <hr>
+        <br>
 
         <% if @contig.primer_reads.assembled.count.positive? || @contig.partial_cons_count&.positive? %>
             <% @contig.partial_cons.includes(:primer_reads).each do |partial_con| %>
@@ -422,6 +424,8 @@
       </div>
 
       <%= render :partial => 'shared/sativa_warnings', :locals => {:marker_sequence => @contig.marker_sequence} %>
+
+      <%= render :partial => 'shared/issue_details', :locals => { :record => @contig } %>
     </div>
   </div>
 </div>

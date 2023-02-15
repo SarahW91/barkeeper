@@ -20,15 +20,12 @@
 # along with BarKeeper.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-class Collection < ApplicationRecord
-  include PgSearch::Model
+# frozen_string_literal: true
 
-  validates_presence_of :name
-  validates :name, uniqueness: true
-  validates :acronym, uniqueness: true
-
-  has_many :individuals, dependent: :nullify
-
-  multisearchable against: [:acronym, :name]
+class AddSolvedToIssues < ActiveRecord::Migration[5.2]
+  def change
+    add_column :issues, :solved, :boolean, default: false
+    add_column :issues, :solved_by, :integer
+    add_column :issues, :solved_at, :datetime
+  end
 end
-

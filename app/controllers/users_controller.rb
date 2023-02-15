@@ -31,7 +31,7 @@ class UsersController < ApplicationController
   end
 
   def new
-    @user = User.new # this is an ecbiodiv test
+    @user = User.new
   end
 
   def create

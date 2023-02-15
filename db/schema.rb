@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_08_05_113213) do
+ActiveRecord::Schema.define(version: 2022_09_16_082521) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
@@ -111,6 +111,7 @@ ActiveRecord::Schema.define(version: 2022_08_05_113213) do
     t.integer "project_id"
     t.integer "has_warnings"
     t.string "verified_by"
+    t.integer "has_issues"
     t.index ["project_id"], name: "index_contig_searches_on_project_id"
   end
 
@@ -265,11 +266,9 @@ ActiveRecord::Schema.define(version: 2022_08_05_113213) do
     t.integer "primer_read_id"
     t.integer "contig_id"
     t.integer "ngs_run_id"
-  end
-
-  create_table "issues_projects", id: false, force: :cascade do |t|
-    t.integer "issue_id"
-    t.integer "project_id"
+    t.boolean "solved", default: false
+    t.integer "solved_by"
+    t.datetime "solved_at"
   end
 
   create_table "lab_racks", id: :serial, force: :cascade do |t|

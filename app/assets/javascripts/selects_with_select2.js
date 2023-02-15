@@ -63,9 +63,6 @@ jQuery(function() {
     $('#isolate_plant_plate_id').select2(select2SingleSelectOptions('a plate'));
     $('#isolate_user_id').select2(select2SingleSelectOptions('a user'));
 
-    // ISSUES
-    $('#issue_project_ids').select2(select2MultiselectOptions);
-
     // LAB RACKS
     $('#lab_rack_shelf_id').select2(select2SingleSelectOptions('a shelf'));
     $('#lab_rack_project_ids').select2(select2MultiselectOptions);
@@ -113,6 +110,7 @@ jQuery(function() {
     $('#query_associated_taxon').select2((select2AutocompleteOptions("/taxa/filter", "a taxon")));
 
     // SHELVES
+    $('#shelf_freezer_id').select2(select2SingleSelectOptions('a freezer'));
     $('#shelf_project_ids').select2(select2MultiselectOptions);
 
     // TAXA

@@ -67,8 +67,12 @@
       <p>
         <img class="lightbox-image doc-image" alt="Specimen View" src=<%= asset_path('Manual/specimen_detail_view.png') %> />
       </p>
-      <p>Below the main table you find a button to <strong>create a new record</strong> of this type. The form that opens will look similar to the edit page but with blank fields. Some information like the name of a record usually has to be entered to allow creation while other fields are optional. After saving a record, you will then be able to see it in the main table.</p>
-      <p>In case of some records (species, isolates, primers) you can <strong>add multiple new records</strong> at a time by uploading a table file (templates can be downloaded) containing data about these records.</p>
+      <p>Below the main table you find a button to <strong>create a new record</strong> of this type. The form that opens
+        will look similar to the edit page but with blank fields. Some information like the name of a record usually has
+        to be entered to allow creation while other fields are optional. After saving a record, you will then be able to
+        see it in the main table.</p>
+      <p>In case of some records (species, isolates and specimen, primers) you can <strong>add multiple new records</strong> at a time
+        by uploading a table file in CSV or XLS format (templates can be downloaded) containing data about these records.</p>
       <p>
         <img class="lightbox-image doc-image" alt="Primer Reads Index" src=<%= asset_path('Manual/primer_reads_datatable.png') %> />
       </p>
@@ -97,7 +101,8 @@
       <p>This will affect what records are displayed throughout the app!</p>
       <p>In the last section of this page your past advanced searches can be accessed. See the manual section about advanced searches to find out more about this feature.</p>
       <h2 id="advanced-searches">Advanced searches</h2>
-      <p>On top of quickly sorting and filtering each data table, you can use the search bar in the navigation bar, which will search across all types of records.</p>
+      <p>On top of quickly sorting and filtering each data table, you can use the search bar in the navigation bar, which
+        will search across all types of records.</p>
       <p>For some types of records (contigs, specimens, marker sequences) a more advanced search feature is available as well.</p>
       <p>
         <img class="lightbox-image doc-image" alt="Advanced Specimen Search" src=<%= asset_path('Manual/advanced_specimen_search.png') %> />
@@ -129,12 +134,20 @@
       <p>
         <img class="lightbox-image doc-image" alt="Primer Read View" src=<%= asset_path('Manual/primer_read_detail_view.png') %> />
       </p>
-      <p>The app will also extract base calls from the raw files. If some base calls are not appropriate, you can change them in this view by clicking on a base and typing the appropriate symbol instead. Hit enter to save the new base call.</p>
+      <p>The app will also extract base calls from the raw files. If some base calls are not appropriate, you can change
+        them in this view by clicking on a base and typing the appropriate symbol instead. Hit enter to save the new base call.</p>
       <p>Below the primer read view you can find some navigation controls to move over the read or jump to specific base indices.</p>
-      <p>In the <em>Description</em> tab you find more information about the read and its associated records in the app (primer, marker, contig). You can change its orientation and restart the automatic primer and contig assignment process in case it did not give the desired results the first time.</p>
+      <p>In the <em>Description</em> tab you find more information about the read and its associated records in the app
+        (primer, marker, contig). You can change its orientation and restart the automatic primer and contig assignment
+        process in case it did not give the desired results the first time.</p>
       <p>In the <em>Files</em> tab you can download the trimmed read as a FASTA file or the original file (AB1/SCF).</p>
       <h3 id="contig-assembly-and-verification">Contig assembly and verification</h3>
-      <p>After more than one read was uploaded and assigned to the same contig, the app will automatically try to assemble them to a contig. It uses a slightly modified Needleman-Wunsch-algorithm to achieve this. The default parameters for assembly can be modified in the Description tab of each contig. Here it can be specified how long overlapping regions need to be and how many mismatches will be allowed in the overlapping region (in %). If an assembly fails, it can help to relax these parameters a little or check the quality of the primer reads again.</p>
+      <p>After more than one read was uploaded and assigned to the same contig, the app will automatically try to assemble
+        them to a contig. It uses a slightly modified Needleman-Wunsch-algorithm to achieve this. These default
+        parameters can be modified in the Description tab of each contig. Here it can be specified how long overlapping
+        regions need to be (default is 15 bases) and how many mismatches will be allowed in the overlapping region (in
+        percent, the default value is 5%). If an assembly fails, it can help to relax these parameters a little or check
+        the quality of the primer reads again.</p>
       <p>Furthermore, it is possible to exclude specific reads from assembly either directly in the contig view from the context menu that opens by clicking on the &quot;i&quot; symbol next to the read name (as shown below) or in the primer read view.</p>
       <p>
         <img class="lightbox-image doc-image" alt="Contig View" src=<%= asset_path('Manual/contig_detail_view.png') %> />

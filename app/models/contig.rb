@@ -53,6 +53,7 @@ class Contig < ApplicationRecord
   scope :internally_verified, -> { internally_edited.verified }
 
   scope :unsolved_warnings, -> { joins(marker_sequence: :mislabels).where(marker_sequence: { mislabels: { solved: false } }) }
+  scope :unsolved_issues, -> { joins(:issues).where(issues: { solved: false }) }
 
 
   def self.import(file, verified_by, marker_id, project_id)
@@ -304,9 +305,7 @@ class Contig < ApplicationRecord
     end
 
     if msg
-      issue = Issue.create(title: msg, contig_id: id)
-      issue.add_projects(projects.pluck(:id))
-      issue.save
+      Issue.create(title: 'Assembly failed', description: msg, contig_id: id)
       self.assembled = false
     end
 

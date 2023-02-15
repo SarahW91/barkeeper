@@ -28,9 +28,9 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable, :rememberable, :timeoutable, :lockable, :validatable
 
   belongs_to :lab
-  has_many :contig_searches
-  has_many :individual_searches
-  has_many :marker_sequence_searches
+  has_many :contig_searches, dependent: :destroy
+  has_many :individual_searches, dependent: :destroy
+  has_many :marker_sequence_searches, dependent: :destroy
 
   validates_presence_of :email # Necessary for Devise
 

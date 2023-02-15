@@ -22,9 +22,7 @@
 
 # frozen_string_literal: true
 
-class IssueDatatable
-  # TODO: fig out if this inclusion is necessary. Found on https://gist.github.com/jhjguxin/4544826, but unclear if makes sense. "delegate" statement alone does not work.
-
+class ShelfDatatable
   include Rails.application.routes.url_helpers
   delegate :url_helpers, to: 'Rails.application.routes'
 
@@ -38,8 +36,8 @@ class IssueDatatable
   def as_json(_options = {})
     {
       sEcho: params[:sEcho].to_i,
-      iTotalRecords: Issue.in_project(@current_default_project).count,
-      iTotalDisplayRecords: issues.total_entries,
+      iTotalRecords: Shelf.in_project(@current_default_project).count,
+      iTotalDisplayRecords: shelves.total_entries,
       aaData: data
     }
   end
@@ -47,35 +45,40 @@ class IssueDatatable
   private
 
   def data
-    issues.map do |issue|
-      primer_read_link = ' '
-      primer_read_link = link_to(issue.primer_read.name, edit_primer_read_path(issue.primer_read)) if issue.primer_read
+    shelves.map do |shelf|
+      shelf_name = link_to shelf.name, edit_shelf_path(shelf)
 
-      contig_link = ' '
-      contig_link = link_to issue.contig.name, edit_contig_path(issue.contig) if issue.contig
+      freezer = ''
+
+      if shelf.freezer
+        freezer = link_to shelf.freezer.freezercode, edit_freezer_path(shelf.freezer)
+      end
 
       [
-        link_to(issue.title, edit_issue_path(issue)),
-        primer_read_link,
-        contig_link,
-        issue.updated_at.in_time_zone('CET').strftime('%Y-%m-%d %H:%M:%S'),
-        link_to('Delete', issue, method: :delete, data: { confirm: 'Are you sure?' })
+        shelf_name,
+        freezer,
+        shelf.updated_at.in_time_zone('CET').strftime('%Y-%m-%d %H:%M:%S'),
+        link_to('Delete', shelf, method: :delete, data: { confirm: 'Are you sure?' })
       ]
     end
   end
 
-  def issues
-    @issues ||= fetch_issues
+  def shelves
+    @shelves ||= fetch_shelves
   end
 
-  def fetch_issues
-    issues = Issue.in_project(@current_default_project).order("#{sort_column} #{sort_direction}") # TODO: ---> maybe add find_each (batches!) later -if possible, probably conflicts with sorting
-    issues = issues.page(page).per_page(per_page)
+  def fetch_shelves
+    shelves = Shelf.includes(:freezer).in_project(@current_default_project).order("#{sort_column} #{sort_direction}")
+
+    shelves = shelves.page(page).per_page(per_page)
 
     if params[:sSearch].present?
-      issues = issues.where('issues.title ILIKE :search', search: "%#{params[:sSearch]}%") # TODO: --> fix to use case-insensitive / postgres
+      shelves = shelves.where('shelves.name ILIKE :search
+OR freezers.freezercode ILIKE :search', search: "%#{params[:sSearch]}%")
+                                       .references(shelf: [freezer: :lab]) if params[:sSearch].present?
     end
-    issues
+
+    shelves
   end
 
   def page
@@ -87,7 +90,7 @@ class IssueDatatable
   end
 
   def sort_column
-    columns = %w[title primer_read_id contig_id updated_at]
+    columns = %w[shelves.name freezers.freezercode shelves.updated_at]
     columns[params[:iSortCol_0].to_i]
   end
 
