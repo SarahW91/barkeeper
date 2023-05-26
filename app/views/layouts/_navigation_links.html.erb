@@ -10,7 +10,7 @@
   <a href="#" class="dropdown-toggle" data-toggle="dropdown"><%= current_project_name %> <b class="caret"></b></a>
   <ul class="dropdown-menu">
     <li><%= link_to 'About', about_path %></li>
-    <li><%= link_to 'Progress status', progress_overview_index_path %></li>
+    <li class="<%= link_disabled %>"><%= link_to 'Progress status', progress_overview_index_path %></li>
     <li class="<%= link_disabled %>"><%= link_to 'Projects', projects_path %></li>
     <% if user_signed_in? %>
       <li class="divider"></li>
@@ -33,18 +33,18 @@
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown">Taxa <b class="caret"></b></a>
   <ul class="dropdown-menu">
-    <li><%= link_to 'Taxonomy', taxa_path %></li>
-    <li><%= link_to 'Specimens', individuals_path %></li>
-    <li><%= link_to 'Collections', collections_path %></li>
+    <li class="<%= link_disabled %>"><%= link_to 'Taxonomy', taxa_path %></li>
+    <li class="<%= link_disabled %>"><%= link_to 'Specimens', individuals_path %></li>
+    <li class="<%= link_disabled %>"><%= link_to 'Collections', collections_path %></li>
   </ul>
 </li>
 
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown">DNA <b class="caret"></b></a>
   <ul class="dropdown-menu">
-    <li><%= link_to 'Isolates', isolates_path %></li>
-    <li><%= link_to 'Primer Reads', primer_reads_path %></li>
-    <li><%= link_to 'Contigs', contigs_path %></li>
+    <li class="<%= link_disabled %>"><%= link_to 'Isolates', isolates_path %></li>
+    <li class="<%= link_disabled %>"><%= link_to 'Primer Reads', primer_reads_path %></li>
+    <li class="<%= link_disabled %>"><%= link_to 'Contigs', contigs_path %></li>
     <li class="<%= link_disabled %>"><%= link_to 'Marker Sequences', marker_sequences_path %></li>
     <li class="divider"></li>
     <li class="<%= link_disabled %>"><%= link_to 'NGS Runs', ngs_runs_path %></li>

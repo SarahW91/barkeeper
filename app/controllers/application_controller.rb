@@ -30,6 +30,6 @@ class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
 
   rescue_from CanCan::AccessDenied do |_exception|
-    redirect_back(fallback_location: root_url, alert: 'You are not authorized to access this page or perform this action.')
+    redirect_back(fallback_location: root_url, alert: 'You are currently not authorized to access this page or perform this action. Please log in and try again.')
   end
 end
