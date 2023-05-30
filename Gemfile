@@ -64,6 +64,15 @@ gem 'whenever', require: false # Runs scheduled jobs via cron
 gem 'will_paginate'
 gem 'will_paginate-bootstrap'
 
+# BarPipe
+gem 'tre-ruby'
+gem 'fuzzy-string-match'
+gem 'ruby-progressbar'
+gem 'parallel'
+gem 'optparse'
+gem 'ostruct'
+gem 'pp'
+
 group :development do
   gem 'better_errors' # Better error page for Rack apps
   gem 'bullet' # Checks for n+1 queries
