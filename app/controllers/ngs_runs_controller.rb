@@ -107,23 +107,27 @@ class NgsRunsController < ApplicationController
   end
 
   def start_analysis
-    if @ngs_run.check_tag_primer_map_count
-      isolates_not_in_db = @ngs_run.samples_exist
-      if isolates_not_in_db.blank?
-        running = @ngs_run.check_server_status # Check if barcoding pipe is already running
+    if ENV['BARCODING_PIPE_PATH']
+      if @ngs_run.check_tag_primer_map_count
+        isolates_not_in_db = @ngs_run.samples_exist
+        if isolates_not_in_db.blank?
+          occupied = @ngs_run.check_server_status
 
-        if running.empty?
-          AnalyseNGSData.perform_async(@ngs_run.id)
-          redirect_to ngs_runs_path, notice: 'Analysing data. This may take a while. Check in later to see results.'
+          if occupied
+            redirect_to ngs_runs_path, alert: "Analysis could not be started: Server is busy. Try again later."
+          else
+            AnalyseNGSData.perform_async(@ngs_run.id)
+            redirect_to ngs_runs_path, notice: 'Analysing data. This may take a while. Check in later to see results.'
+          end
         else
-          redirect_to ngs_runs_path, alert: "Analysis could not be started: Server is busy. Try again later."
+          redirect_back(fallback_location: ngs_runs_path,
+                        alert: "Please create database entries for the following isolates before starting the import: #{isolates_not_in_db.join(', ')}")
         end
       else
-        redirect_back(fallback_location: ngs_runs_path,
-                      alert: "Please create database entries for the following sample IDs before starting the import: #{isolates_not_in_db.join(', ')}")
+        redirect_back(fallback_location: ngs_runs_path, alert: 'Please make sure you uploaded as many properly formatted tag primer maps as stated in the packages fasta.')
       end
     else
-      redirect_back(fallback_location: ngs_runs_path, alert: 'Please make sure you uploaded as many properly formatted tag primer maps as stated in the packages fasta.')
+      redirect_back(fallback_location: ngs_runs_path, alert: 'Analysis can not be started: Please inform an administrator that no path for the BarPipe module was configured.')
     end
   end
 

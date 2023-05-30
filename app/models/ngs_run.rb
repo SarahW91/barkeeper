@@ -116,6 +116,24 @@ class NgsRun < ApplicationRecord
   end
 
   def run_pipe
+    if ENV['REMOTE_SERVER_PATH']
+      run_pipe_remotely
+    else
+      run_pipe_locally
+    end
+  end
+
+  def import(results_path)
+    if ENV['REMOTE_SERVER_PATH']
+      import_from_remote(results_path)
+    else
+      import_from_local # No path needed: It is either stored in ENV var or root dir is used
+    end
+  end
+
+  private
+
+  def run_pipe_remotely
     Net::SSH.start(ENV['REMOTE_SERVER_PATH'], ENV['REMOTE_USER'], keys: remote_key_list) do |session|
       analysis_dir = "#{ENV['BARCODING_PIPE_RESULTS_PATH']}/#{name}"
       output_dir = "#{ENV['BARCODING_PIPE_RESULTS_PATH']}/#{name}_out"
@@ -124,7 +142,7 @@ class NgsRun < ApplicationRecord
       session.exec!("rm -R #{analysis_dir}")
       session.exec!("mkdir #{analysis_dir}")
 
-      # Write and uplaod adapter platepool (set tag map) file
+      # Write and upload adapter platepool (set tag map) file
       if set_tag_map.attached?
         File.open("#{Rails.root}/#{set_tag_map.filename}", 'w') do |file|
           file << set_tag_map.download
@@ -146,7 +164,7 @@ class NgsRun < ApplicationRecord
       end
 
       # Start analysis on server
-      start_command = "ruby #{ENV['BARCODING_PIPE_PATH']}"
+      start_command = "ruby #{ENV['BARCODING_PIPE_PATH']}/barpipe.rb"
       start_command << "-s #{analysis_dir}/#{set_tag_map.filename} " if set_tag_map.attached? # Path to adapter platepool file on server
       tag_primer_maps.each do |tag_primer_map|
         start_command << "-m #{"#{analysis_dir}/#{tag_primer_map.tag_primer_map.filename}"} " # Path to tag primer map on server
@@ -170,7 +188,62 @@ class NgsRun < ApplicationRecord
     end
   end
 
-  def import(results_path)
+  def run_pipe_locally
+    # TODO will this run fully local if BarPipe is not part of the Docker container?
+
+    results_path = ENV['BARCODING_PIPE_RESULTS_PATH']
+    results_path ||= Rails.root # in case no path was specified
+
+    analysis_dir = "#{results_path}/#{name}"
+    output_dir = "#{results_path}/#{name}_out"
+
+    # Create analysis directory (and remove older versions)
+    `rm -R #{analysis_dir}"`
+    `mkdir #{analysis_dir}`
+
+    # Write adapter platepool (set tag map) file
+    if set_tag_map.attached?
+      set_tag_map_path = "#{analysis_dir}/#{set_tag_map.filename}"
+
+      File.open(set_tag_map_path, 'w') do |file|
+        file << set_tag_map.download
+      end
+    end
+
+    # Write edited tag primer maps
+    tag_primer_maps.each do |tag_primer_map|
+      tpm_filename = tag_primer_map.tag_primer_map.filename
+
+      File.open("#{analysis_dir}/#{tpm_filename}", 'w') do |file|
+        file << tag_primer_map.revised_tag_primer_map(projects.map(&:id))
+      end
+    end
+
+    # Start analysis with BarPipe
+    start_command = "ruby #{Rails.root}/BarPipe/barcoding_pipe.rb"
+    start_command << "-s #{analysis_dir}/#{set_tag_map.filename} " if set_tag_map.attached? # Path to adapter platepool file on server
+    tag_primer_maps.each do |tag_primer_map|
+      start_command << "-m #{"#{analysis_dir}/#{tag_primer_map.tag_primer_map.filename}"} " # Path to tag primer map on server
+    end
+    start_command << "-w \"#{fastq_location}\" " # WebDAV address of raw analysis files
+    start_command << "-o #{output_dir} " # Output directory
+    start_command << "-d #{self.id} "
+    start_command << "-t #{taxon.scientific_name} " if self.taxon
+    start_command << "-q #{self.quality_threshold} "
+    start_command << "-p #{self.primer_mismatches} " if self.primer_mismatches && self.primer_mismatches != 0.0
+    start_command << "-b #{self.tag_mismatches} "
+
+    `#{start_command}` # Run analysis command
+
+    # Remove edited tag primer maps and set tag map
+    tag_primer_maps.each do |tag_primer_map|
+      FileUtils.rm("#{analysis_dir}/#{tag_primer_map.tag_primer_map.filename}")
+    end
+
+    FileUtils.rm("#{analysis_dir}/#{set_tag_map.filename}") if set_tag_map.attached?
+  end
+
+  def import_from_remote(results_path)
     # Download results from remote server (action will be called at end of analysis script!)
     Net::SFTP.start(ENV['REMOTE_SERVER_PATH'], ENV['REMOTE_USER'], keys: remote_key_list) do |sftp|
       sftp.stat(results_path) do |response|
@@ -185,8 +258,6 @@ class NgsRun < ApplicationRecord
           # Download result file
           sftp.download!(results_path, "#{Rails.root}/#{self.name}_out.zip")
 
-          #TODO: Maybe add possibility to use AWS copy here in case of a reimport of data at a later point
-
           # Unzip results
           Zip::File.open("#{Rails.root}/#{self.name}_out.zip") do |zip_file|
             zip_file.each do |entry|
@@ -197,21 +268,21 @@ class NgsRun < ApplicationRecord
           # Import data
           Marker.all.each do |marker|
             begin
-              import_clusters(marker)
+              import_clusters(Rails.root, marker)
             rescue
               self.issues << Issue.create(title: "Import error",
-                                       description: "Something went wrong when importing clusters for marker #{marker.name}")
+                                          description: "Something went wrong when importing clusters for marker #{marker.name}")
             end
           end
 
-          import_analysis_stats
+          import_analysis_stats(Rails.root)
 
           tag_primer_maps.each do |tpm|
             begin
-              import_results("#{tpm.tag_primer_map.filename.to_s.gsub('.txt', '')}_expanded.txt")
+              import_results(Rails.root, "#{tpm.tag_primer_map.filename.to_s.gsub('.txt', '')}_expanded.txt")
             rescue Exception => e
               self.issues << Issue.create(title: "Import error",
-                                       description: "Importing results for tag primer map #{tpm.tag_primer_map.filename}
+                                          description: "Importing results for tag primer map #{tpm.tag_primer_map.filename}
                                                      resulted in error:\n#{e.message}")
             end
           end
@@ -225,14 +296,60 @@ class NgsRun < ApplicationRecord
           FileUtils.rm_r("#{Rails.root}/#{self.name}_out")
         else
           self.issues << Issue.create(title: "Result file not found",
-                                   description: "The requested result file could not be found on the server.")
+                                      description: "The requested result file could not be found on the server.")
         end
       end
     end
   end
 
-  def import_clusters(marker)
-    if File.exist?("#{Rails.root}/#{self.name}_out/#{marker.name}.fasta")
+  # Action will be called at end of the BarPipe to import results into BarKeeper
+  def import_from_local
+    results_path = ENV['BARCODING_PIPE_RESULTS_PATH']
+    results_path ||= Rails.root # in case no path was specified
+
+    if Dir.exists?("#{results_path}/#{self.name}_out")
+      # Delete older results
+      results.purge
+      Cluster.where(ngs_run_id: id).delete_all
+      NgsResult.where(ngs_run_id: id).delete_all
+
+      # Import data
+      Marker.all.each do |marker|
+        begin
+          import_clusters(results_path, marker)
+        rescue
+          self.issues << Issue.create(title: "Import error",
+                                      description: "Something went wrong when importing clusters for marker #{marker.name}")
+        end
+      end
+
+      import_analysis_stats(results_path)
+
+      tag_primer_maps.each do |tpm|
+        begin
+          import_results(results_path, "#{tpm.tag_primer_map.filename.to_s.gsub('.txt', '')}_expanded.txt")
+        rescue Exception => e
+          self.issues << Issue.create(title: "Import error",
+                                      description: "Importing results for tag primer map #{tpm.tag_primer_map.filename}
+                                                 resulted in error:\n#{e.message}")
+        end
+      end
+
+      # Store results as attachment
+      self.results.attach(io: File.open("#{results_path}/#{self.name}_out.zip"), filename: "#{self.name}_out.zip", content_type: 'application/zip')
+      save!
+
+      # Remove temporary files from server
+      FileUtils.rm_r("#{results_path}/#{self.name}_out.zip")
+      FileUtils.rm_r("#{results_path}/#{self.name}_out")
+    else
+      self.issues << Issue.create(title: "Result directory not found",
+                                  description: "The requested BarPipe results could not be found.")
+    end
+  end
+
+  def import_clusters(results_path, marker)
+    if File.exist?("#{results_path}/#{self.name}_out/#{marker.name}.fasta")
       puts "Importing results for #{marker.name}..."
       Bio::FlatFile.open(Bio::FastaFormat, "#{Rails.root}/#{self.name}_out/#{marker.name}.fasta") do |ff|
         ff.each do |entry|
@@ -270,8 +387,8 @@ class NgsRun < ApplicationRecord
     end
   end
 
-  def import_analysis_stats
-    File.open("#{Rails.root}/#{self.name}_out/#{self.name}_log.txt").each do |line|
+  def import_analysis_stats(results_path)
+    File.open("#{results_path}/#{self.name}_out/#{self.name}_log.txt").each do |line|
       line_parts = line.split(':')
       value = line_parts[1].to_i
 
@@ -292,8 +409,8 @@ class NgsRun < ApplicationRecord
     end
   end
 
-  def import_results(tpm_file_name)
-    results = CSV.read("#{Rails.root}/#{self.name}_out/#{tpm_file_name}", headers:true, col_sep: "\t")
+  def import_results(results_path, tpm_file_name)
+    results = CSV.read("#{results_path}/#{self.name}_out/#{tpm_file_name}", headers:true, col_sep: "\t")
 
     results.each do |result|
       sample_id = result['#SampleID'].match(/\D+\d+|\D+\z/)[0]
@@ -313,15 +430,19 @@ class NgsRun < ApplicationRecord
     end
   end
 
-  private
-
+  # Checks if barcoding pipe is already running in case an external server is used, otherwise just returns false
   def check_server_status
-    Net::SSH.start(ENV['REMOTE_SERVER_PATH'], ENV['REMOTE_USER'], keys: remote_key_list) do |session|
-      session.exec!("pgrep -f \"barcoding_pipe.rb\"")
+    occupied = false
+    if ENV['REMOTE_SERVER_PATH']
+      Net::SSH.start(ENV['REMOTE_SERVER_PATH'], ENV['REMOTE_USER'], keys: remote_key_list) do |session|
+        occupied = !session.exec!("pgrep -f \"barcoding_pipe.rb\"").empty?
+      end
     end
+    occupied
   end
 
   def remote_key_list
+    # TODO how can keys be obtained from main storage system?
     if ENV['REMOTE_KEYS'].include?(';')
       ENV['REMOTE_KEYS'].split(';')
     else
