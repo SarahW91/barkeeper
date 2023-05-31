@@ -121,7 +121,7 @@ begin
 			@rc_info = rc
 
 			if qualityFiltering(@sequence)
-				if $multiple_plates && $options["webdav"] == nil #TODO: Das kann nicht so bleiben -> sollte sich aufs tatsächliche Dateiformat beziehen, nicht auf webdav
+				if $multiple_plates && $options["webdav"] == nil
 					@this_plate = findPlate()
 					@this_tpm = $tpm_info[@this_plate]
 				elsif $multiple_plates
@@ -132,13 +132,13 @@ begin
 					@this_tpm = $tpm_info[@this_plate]
 				end
 
-				barcodeRangeGetter()
+				barcodeRangeGetter
 				if @barcodes.length == 0
 					$no_barcode == true
 				else
-					matchingPrimerPairs()
+					matchingPrimerPairs
 					if @primers.length != 0 || @one_primer_only_pairs.length != 0
-						sequences = splitMultiples()
+						sequences = splitMultiples
 						sequences_w_motifs = motifAssignmnent(sequences)
 						sequences_w_motifs.each do |seq, motifs|
 							if qualityFiltering(seq)
@@ -172,7 +172,7 @@ begin
 			return hits
 		end
 
-		def self.findPlate()
+		def self.findPlate
 			$splitter_tags.each do |tpm, tag|
 				if (@sequence.afind tag, 0, TRE.fuzziness(0)) != nil
 					return tpm
@@ -197,7 +197,7 @@ begin
 			end
 		end
 
-		def self.barcodeRangeGetter()
+		def self.barcodeRangeGetter
 			barcode_ranges = {}
 			barcode_array = @this_tpm["barcodes"]
 			barcode_array.each do |barcode|
@@ -450,14 +450,14 @@ begin
 		return mismatches
 	end
 
-	def calculateNumThreads()
+	def calculateNumThreads
 		idle_cpu = `top -bn1 | grep Cpu`.scan(/\d+\.\d\sid/)[0].split(" ")[0].to_f
 		free_threads = (idle_cpu/100)*112
 		num_threads = (free_threads*0.8).to_i
 		while num_threads%4 != 0
 			num_threads -= 1
 		end
-		#return num_threads
+
 		return 24
 	end
 
@@ -466,15 +466,8 @@ begin
 	########
 
 	require 'bio'
-	#TODO: Alternative überlegen, woher ich den job title bekomme ...
+
 	job_title = $options["title"]
-
-	#if $options["fa"] != nil
-	#	job_title = "#{$options["fa"]}".split("/")[-1].split(".f")[0]
-	#else
-	#	job_title = "#{$options["webdav"].split(/[\/\.]/)[-2]}"
-	#end
-
 
 	if Dir.exist?("#{$options["output"]}#{job_title}_intermediate_out")
 		puts "It seems like you have run this job before. Do you want to delete the intermediate results before moving on?"
@@ -510,7 +503,7 @@ begin
 		$options["map"].each do |tpm|
 			tpms << tpm.scan(/(?<!\.|\D)[^._\d]+/)[-1]
 		end
-	else #TODO: überarbeiten ;)
+	else
 		tpms = ["A"]
 	end
 
@@ -538,7 +531,7 @@ begin
 			`mkdir #{ccs_folder} #{lima_folder} #{fasta_folder} #{webdav_folder}`
 			
 			if !File.file?("#{webdav_folder}.tar")
-				`wget -O #{webdav_folder}.tar --user '#{ENV_VAR}' --password '#{ENV_VAR}' '#{$options["webdav"]}'` #fetch .tar from webDav
+				`wget -O #{webdav_folder}.tar --user '#{ENV['WEBDAV_USER']}' --password '#{ENV['WEBDAV_PASSWORD']}' '#{$options["webdav"]}'` #fetch .tar from webDav
 				`tar -xvf #{webdav_folder}.tar -C #{webdav_folder} --strip-components 1`
 			end
 
@@ -561,11 +554,10 @@ begin
 				end
 				$options["fa"] = fa
 			else
-				#convert ~subreads.bam to ccs (needs the presence of the pbi-file, as far as I understood)
+				# Convert ~subreads.bam to ccs (needs the presence of the pbi-file, as far as I understood)
 				puts "Starting CCS"
-				#TODO: 2> /dev/null
 				if !File.file?(ccs_file)
-					`ccs --minLength=100 --num-threads=#{calculateNumThreads()} --min-passes=2 --min-rq=0.95 #{bam} #{ccs_file}`
+					`ccs --minLength=100 --num-threads=#{calculateNumThreads} --min-passes=2 --min-rq=0.95 #{bam} #{ccs_file}`
 					#`ccs --minLength=100 --num-threads=#{calculateNumThreads()} --min-passes=2 --minReadScore=0.6 --minPredictedAccuracy=0.95 #{bam} #{ccs_file}`
 				end
 
@@ -573,7 +565,7 @@ begin
 				if $multiple_plates
 					puts "Starting LIMA"
 					if `ls -A #{lima_folder}/`.empty?
-						`lima --ccs --split-bam-named -K --num-threads #{calculateNumThreads()} #{ccs_file} #{$options["tpm_splitter"]} #{lima_file}.bam` #Demultiplex platepools
+						`lima --ccs --split-bam-named -K --num-threads #{calculateNumThreads} #{ccs_file} #{$options["tpm_splitter"]} #{lima_file}.bam` #Demultiplex platepools
 					end				
 			 
 				 	#convert ccs2fasta
@@ -589,15 +581,6 @@ begin
 					`samtools bam2fq #{ccs_file} | seqtk seq -A - > #{fasta_folder}/#{job_title}.fasta` if !File.file?("#{fasta_folder}/#{job_title}.fasta")
 					filtered_fasta << "#{fasta_folder}/#{job_title}.fasta"
 				end
-
-				#tpms.each do |letter|
-				#	if File.file?("#{lima_file}.#{job_title}_#{letter}--#{job_title}_#{letter}.bam")
-				#		`samtools bam2fq #{lima_file}.#{job_title}_#{letter}--#{job_title}_#{letter}.bam | seqtk seq -A - > #{fasta_folder}/#{job_title}#{letter}.fasta`
-				#	else
-				#		`samtools bam2fq #{lima_file}.#{job_title}#{letter}--#{job_title}#{letter}.bam | seqtk seq -A - > #{fasta_folder}/#{job_title}#{letter}.fasta`
-				#	end
-				#	filtered_fasta << "#{fasta_folder}/#{job_title}#{letter}.fasta"
-				#end
 			end
 		else
 			filtered_fasta = `find #{fasta_folder}/*.fasta`.split
@@ -648,40 +631,14 @@ begin
 
 			map_content.gsub!(/\n\t\t\t\t\t\t/, "")
 
-			#if map_content.include?("TagID")
-			#	curated_map_content = []
-			#	map_content = map_content.split("\n")
-			#	column_to_remember = []
-			#	map_content.each do |line|
-			#		fields = line.chomp.split("\t")
-			#		if $column == nil
-			#			$column = fields.index("TagID")
-			#		end
-			#		column_to_remember << fields[$column]
-			#		fields.delete_at($column)
-			#		curated_map_content << fields.join("\t")
-			#	end
-			#	map_content = curated_map_content.join("\n")
-			#end
-
 			altered_tpm = "#{tpm.rpartition(".").first}_altered.txt"
 			File.open(altered_tpm, "w+") do |f|
 				f.puts map_content
 			end
 
-			sarahs_tpm = `curl -F tpm="@#{altered_tpm}" "https://gbol5.de/ngs_runs/revised_tpm" -u "external_user:K25#+95=@qmVgA5K"`
-			#p sarahs_tpm
+      revised_tpm = `curl -F tpm="@#{altered_tpm}" "https://#{ENV['PROJECT_DOMAIN']}/ngs_runs/revised_tpm" -u "#{ENV['API_USER_NAME']}:#{ENV['API_PASSWORD']}"`
 
-			#altered_map_content = []
-			#line_count = 0
-			#map_content.split("\n").each do |line|
-			#	altered_map_content << line + "\t" + column_to_remember[line_count] + "\t" + sarahs_tpm.split("\n")[line_count].split(",")[-1].chomp
-			#	line_count += 1
-			#end
-#
-			#map_content = altered_map_content.join("\n")
-
-			map_content = sarahs_tpm.gsub(",", "\t")
+			map_content = revised_tpm.gsub(",", "\t")
 			map_content.gsub!("\t\t" "\t")
 
 			File.open(altered_tpm, "w+") do |f|
@@ -730,7 +687,7 @@ begin
 
 	$tpm_info = {}
 	regions_array = []
-	region_gbol_definition_link = {}
+	region_id_definition_link = {}
 
 	$options["map"].each do |tpm|
 		plate = tpm.scan(/[0-9]+[0-9A-Za-z]*/)[-1]
@@ -749,7 +706,6 @@ begin
 
 			$tpm_info[plate]["barcodes"] << barcode
 			$barcode_counter[barcode] = 0
-			#$tpm_info[plate]["barcode_counter"][barcode] = 0
 			$tpm_info[plate]["description_link"][[linker_primer, reverse_primer, barcode]] = row["Description"]
 			
 			if !$tpm_info[plate]["primers"].keys.include?(linker_primer)
@@ -761,7 +717,7 @@ begin
 				$tpm_info[plate]["mismatches"][reverse_primer] = calculateMismatches(reverse_primer, $options["primer_mismatches"])
 			end
 
-			region_gbol_definition_link[row["#SampleID"]] = row["Description"]
+			region_id_definition_link[row["#SampleID"]] = row["Description"]
 		end
 		$tpm_info[plate]["barcodes"].uniq!
 		$tpm_info[plate]["regions"].uniq!
@@ -855,23 +811,23 @@ begin
 		
 		region_dir.each do |parsed_file|
 			progressbar.increment
-			gbol = parsed_file.split(/[\/.]/)[-2]
+      isolate_id = parsed_file.split(/[\/.]/)[-2]
 
-			if !File.exist?("#{usearch_output_dir}/log_#{gbol}")
-				`'/data/data2/lara/Barcoding/usearch11.0.667_i86linux32' -id #{$options["identity"]} -cluster_fast '#{parsed_file}' -quiet -centroids '#{usearch_output_dir}/#{gbol}_centroid' -uc '#{usearch_output_dir}/log_#{gbol}' -consout '#{usearch_output_dir}/#{gbol}_consensus'`
+			if !File.exist?("#{usearch_output_dir}/log_#{isolate_id}")
+				`usearch -id #{$options["identity"]} -cluster_fast '#{parsed_file}' -quiet -centroids '#{usearch_output_dir}/#{isolate_id}_centroid' -uc '#{usearch_output_dir}/log_#{isolate_id}' -consout '#{usearch_output_dir}/#{isolate_id}_consensus'`
 			end
-			if !File.exist?("#{blast_output_dir}/#{gbol}")
-				puts "blastn -num_threads #{calculateNumThreads()} -db nt -max_target_seqs 1 -outfmt '6 qseqid sskingdoms sscinames staxids evalue length pident nident mismatch gaps sacc sseqid stitle' -evalue 1e-10 -query '#{usearch_output_dir}/#{gbol}_centroid' -out '#{blast_output_dir}/#{gbol}'" 
-				`blastn -num_threads #{calculateNumThreads()} -db nt -max_target_seqs 1 -outfmt '6 qseqid sskingdoms sscinames staxids evalue length pident nident mismatch gaps sacc sseqid stitle' -evalue 1e-10 -query '#{usearch_output_dir}/#{gbol}_centroid' -out '#{blast_output_dir}/#{gbol}'`
+			if !File.exist?("#{blast_output_dir}/#{isolate_id}")
+				puts "blastn -num_threads #{calculateNumThreads} -db nt -max_target_seqs 1 -outfmt '6 qseqid sskingdoms sscinames staxids evalue length pident nident mismatch gaps sacc sseqid stitle' -evalue 1e-10 -query '#{usearch_output_dir}/#{isolate_id}_centroid' -out '#{blast_output_dir}/#{isolate_id}'"
+				`blastn -num_threads #{calculateNumThreads} -db nt -max_target_seqs 1 -outfmt '6 qseqid sskingdoms sscinames staxids evalue length pident nident mismatch gaps sacc sseqid stitle' -evalue 1e-10 -query '#{usearch_output_dir}/#{isolate_id}_centroid' -out '#{blast_output_dir}/#{isolate_id}'`
 			end
 
 			#how many clusters?
-			clusters_per_sample["#{region}#{gbol}"] = `grep -c "^C" '#{usearch_output_dir}/log_#{gbol}'`.to_i
+			clusters_per_sample["#{region}#{isolate_id}"] = `grep -c "^C" '#{usearch_output_dir}/log_#{isolate_id}'`.to_i
 
 			#retrieve ids
-			seq_name = `awk -F"\t" '{print $1}' '#{blast_output_dir}/#{gbol}'`.split("\n")
-			taxids = `awk -F"\t" '{print $4}' '#{blast_output_dir}/#{gbol}'`.split("\n")
-			evalue = `awk -F"\t" '{print $5}' '#{blast_output_dir}/#{gbol}'`.split("\n")
+			seq_name = `awk -F"\t" '{print $1}' '#{blast_output_dir}/#{isolate_id}'`.split("\n")
+			taxids = `awk -F"\t" '{print $4}' '#{blast_output_dir}/#{isolate_id}'`.split("\n")
+			evalue = `awk -F"\t" '{print $5}' '#{blast_output_dir}/#{isolate_id}'`.split("\n")
 			seqname_to_id = seq_name.zip(taxids).to_h
 
 			times = *(0...evalue.length)
@@ -899,8 +855,8 @@ begin
 			type = record_type[record_index]
 			if type == "C"
 				centroid_seq = query_sequence[record_index]
-				gbol = query_sequence[record_index].split("_")[0]
-				cluster_info["#{gbol}_#{region}_#{cluster_number[record_index]}"] = [cluster_size[record_index], centroid_seq, seqname_to_lineage[query_sequence[record_index]]]
+        isolate_id = query_sequence[record_index].split("_")[0]
+				cluster_info["#{isolate_id}_#{region}_#{cluster_number[record_index]}"] = [cluster_size[record_index], centroid_seq, seqname_to_lineage[query_sequence[record_index]]]
 			end
 
 			cluster_nums[query_sequence[record_index]] = cluster_number[record_index]
@@ -923,18 +879,17 @@ begin
 				region = row["Region"]
 				description = row["Description"]
 				id = row["#SampleID"].scan(/(\D+\d+|\D+\z)/)
-				gbol = id[0][0]
+        isolate_id = id[0][0]
 				id_plus_marker = id.join("_")
 				
-				if File.exist?("#{$options["output"]}#{job_title}_intermediate_out/#{region}_parsed/#{gbol}.fasta")
-					high_qual = `grep -c "^>" '#{$options["output"]}#{job_title}_intermediate_out/#{region}_parsed/#{gbol}.fasta'`.chomp.to_i
-					#evtl anders berechnen, wenn gbol IDs auch plattenübergreifend auftauchen können
+				if File.exist?("#{$options["output"]}#{job_title}_intermediate_out/#{region}_parsed/#{isolate_id}.fasta")
+					high_qual = `grep -c "^>" '#{$options["output"]}#{job_title}_intermediate_out/#{region}_parsed/#{isolate_id}.fasta'`.chomp.to_i
 				else
 					high_qual = 0
 				end
 				linker_primer_only = $one_primer_only[description]
 				linker_primer_only = 0 if linker_primer_only == nil
-				clusters = clusters_per_sample["#{region}#{gbol}"]
+				clusters = clusters_per_sample["#{region}#{isolate_id}"]
 				out << [id_plus_marker] + row[1..-1] + [high_qual, linker_primer_only, clusters, high_qual + linker_primer_only]
 			end
 		end
@@ -993,10 +948,10 @@ begin
 				Bio::FlatFile.open(Bio::FastaFormat, input_fasta_file).each do |entry|
 					seqname = entry.definition
 					splitted_seqname = seqname.split("|")
-					gbol_descr, sequence_id, rc_info = splitted_seqname[0], splitted_seqname[1], splitted_seqname[-1]
+          isolate_descr, sequence_id, rc_info = splitted_seqname[0], splitted_seqname[1], splitted_seqname[-1]
 					cluster_num = cluster_nums[entry.definition]
-					gbol = gbol_descr.split("_")[0]
-					this_cluster_info = cluster_info["#{gbol}_#{region}_#{cluster_num}"]
+          isolate_id = isolate_descr.split("_")[0]
+					this_cluster_info = cluster_info["#{isolate_id}_#{region}_#{cluster_num}"]
 					
 					begin
 						lineage, centroid_seqid, cluster_size = this_cluster_info[2], this_cluster_info[1], this_cluster_info[0]
@@ -1019,14 +974,14 @@ begin
 						lineage_to_print = "NA"
 					end
 
-					if gbol_descr == $last_descr
+					if isolate_descr == $last_descr
 						$num += 1
 					else
 						$num = 0
 					end
 
-					$last_descr = gbol_descr
-					gbol_descr = gbol_descr + "_#{$num}"
+					$last_descr = isolate_descr
+					isolate_descr = isolate_descr + "_#{$num}"
 
 					#obtain cluster size
 					if cluster_num != nil
@@ -1037,7 +992,7 @@ begin
 
 					evalue = evalues[centroid_seqid]
 
-					definition = ">#{gbol_descr}|#{cluster_num}(#{cluster_size})|#{lineage_to_print}|#{evalue}|#{sequence_id}|#{rc_info}"
+					definition = ">#{isolate_descr}|#{cluster_num}(#{cluster_size})|#{lineage_to_print}|#{evalue}|#{sequence_id}|#{rc_info}"
 					out.puts definition
 					out.puts entry.seq
 
@@ -1055,9 +1010,9 @@ begin
 
 					#$too_long_short += 1 if definition.include?("NA|NA")
 					begin
-						info_for_consensus["#{gbol}#{region}#{cluster_num.split("*")[0]}"] = [cluster_size, evalue, lineage_to_print]
+						info_for_consensus["#{isolate_id}#{region}#{cluster_num.split("*")[0]}"] = [cluster_size, evalue, lineage_to_print]
 					rescue
-						info_for_consensus["#{gbol}#{region}#{cluster_num}"] = [cluster_size, evalue, lineage_to_print]
+						info_for_consensus["#{isolate_id}#{region}#{cluster_num}"] = [cluster_size, evalue, lineage_to_print]
 					end
 				end
 			end
@@ -1071,23 +1026,23 @@ begin
 	regions_array.each do |region|
 		consensus_files = Dir["#{$options["output"]}#{job_title}_intermediate_out/#{region}_clusters/*_consensus"]
 		consensus_files.each do |consensus_file|
-			gbol = consensus_file.scan(/(?<=\/)[^\/]+(?=_)/)[-1]
+      isolate_id = consensus_file.scan(/(?<=\/)[^\/]+(?=_)/)[-1]
 			Bio::FlatFile.open(Bio::FastaFormat, consensus_file).each do |entry|
 				cluster_num = entry.definition.scan(/\d+/)[0]
-				gbol_definition = region_gbol_definition_link["#{gbol}#{region}"]
-				info = info_for_consensus["#{gbol}#{region}#{cluster_num}"]
+        isolate_definition = region_id_definition_link["#{isolate_id}#{region}"]
+				info = info_for_consensus["#{isolate_id}#{region}#{cluster_num}"]
 				cluster_size = info[0]
 				taxonomy = info[2]
 				evalue = info[1]
 
 				if taxonomy.include?($options["taxon"])
 					File.open("#{$user_output_dir}/#{region}_consensus_#{$options["taxon"]}.fasta", "a+") do |e_out|
-						e_out.puts ">#{gbol_definition}|#{cluster_num}*consensus(#{cluster_size})|#{taxonomy}|#{evalue}"
+						e_out.puts ">#{isolate_definition}|#{cluster_num}*consensus(#{cluster_size})|#{taxonomy}|#{evalue}"
 						e_out.puts entry.seq
 					end
 				else
 					File.open("#{$user_output_dir}/#{region}_consensus_non-#{$options["taxon"]}.fasta", "a+") do |no_e_out|
-						no_e_out.puts ">#{gbol_definition}|#{cluster_num}*consensus(#{cluster_size})|#{taxonomy}|#{evalue}"
+						no_e_out.puts ">#{isolate_definition}|#{cluster_num}*consensus(#{cluster_size})|#{taxonomy}|#{evalue}"
 						no_e_out.puts entry.seq
 					end
 				end
@@ -1099,7 +1054,7 @@ begin
 	#OUTPUT FILE 3: plate info
 	##########################
 
-	seqs_pre_filtering = `wc -l '#{$options["fa"]}'`.to_i / 4 if seqs_pre_filtering != "NA" #TODO: if FASTQ! Should be able to handle FASTA as well!
+	seqs_pre_filtering = `wc -l '#{$options["fa"]}'`.to_i / 4 if seqs_pre_filtering != "NA"
 	seqs_post_filtering_qiime = 0
 	regions_array.each do |region|
 		seqs_post_filtering_qiime += `grep -c "^>" '#{$user_output_dir}/#{region}.fasta'`.to_i
@@ -1121,10 +1076,14 @@ begin
 	Dir.chdir("#{$options["output"]}"){
 	  %x[zip -r '#{job_title}_out.zip' '#{job_title}_out']
 	}
-	#{}`rm -r '#{$user_output_dir}'`
 
 	if $options["id"] != nil
-		`curl -X POST "https://gbol5.de/ngs_runs/#{id}/import?results_path=#{$options["output"]}#{job_title}_out.zip" -u "external_user:#{ENV_VAR}"`
+    results_path = "#{$options["output"]}#{job_title}_out.zip"
+    if ENV['REMOTE_SERVER_PATH']
+			`curl -X POST "https://#{ENV['PROJECT_DOMAIN']}/ngs_runs/#{id}/import?results_path=#{$options["output"]}#{job_title}_out.zip" -u "#{ENV['API_USER_NAME']}:#{ENV['API_PASSWORD']}"`
+    else
+      NgsRun.find(id).import(results_path)
+    end
 	end
 rescue => exception
 	File.open("#{$user_output_dir}/#{job_title}_stderr.txt", "a+") do |out|

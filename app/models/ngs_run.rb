@@ -164,7 +164,7 @@ class NgsRun < ApplicationRecord
       end
 
       # Start analysis on server
-      start_command = "ruby #{ENV['BARCODING_PIPE_PATH']}/barpipe.rb"
+      start_command = "ruby #{ENV['BARCODING_PIPE_PATH']}/barcoding_pipe.rb"
       start_command << "-s #{analysis_dir}/#{set_tag_map.filename} " if set_tag_map.attached? # Path to adapter platepool file on server
       tag_primer_maps.each do |tag_primer_map|
         start_command << "-m #{"#{analysis_dir}/#{tag_primer_map.tag_primer_map.filename}"} " # Path to tag primer map on server
@@ -189,8 +189,6 @@ class NgsRun < ApplicationRecord
   end
 
   def run_pipe_locally
-    # TODO will this run fully local if BarPipe is not part of the Docker container?
-
     results_path = ENV['BARCODING_PIPE_RESULTS_PATH']
     results_path ||= Rails.root # in case no path was specified
 
