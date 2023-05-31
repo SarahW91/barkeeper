@@ -2,7 +2,7 @@
 
 <p>
   <% if user_signed_in? %>
-    <% if current_user.admin? && !@ngs_run.analysis_started %>
+    <% if (current_user.admin? || current_user.supervisor?) && !@ngs_run.analysis_started %>
       <%= link_to 'Start analysis',
                   start_analysis_ngs_run_path(@ngs_run),
                   method: :post,
