@@ -1,1 +1,0 @@
-`curl -F tpm="@/data/data2/lara/Barcoding/111217/111217_tagPrimerMaps/tagPrimerExample.txt" "https://gbol5.de/ngs_runs/revised_tpm" -u "external_user:K25#+95=@qmVgA5K" > "/data/data2/lara/Barcoding/111217/111217_tagPrimerMaps/Sarah_out.csv"`

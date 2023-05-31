@@ -538,7 +538,7 @@ begin
 			`mkdir #{ccs_folder} #{lima_folder} #{fasta_folder} #{webdav_folder}`
 			
 			if !File.file?("#{webdav_folder}.tar")
-				`wget -O #{webdav_folder}.tar --user 'pacbio.pbox@uni-bonn.de' --password 'P&dMt7m7CJ%V' '#{$options["webdav"]}'` #fetch .tar from webDav
+				`wget -O #{webdav_folder}.tar --user '#{ENV_VAR}' --password '#{ENV_VAR}' '#{$options["webdav"]}'` #fetch .tar from webDav
 				`tar -xvf #{webdav_folder}.tar -C #{webdav_folder} --strip-components 1`
 			end
 
@@ -1123,16 +1123,13 @@ begin
 	}
 	#{}`rm -r '#{$user_output_dir}'`
 
-	`/data/data2/lara/send_telegram.sh "Barcoding pipe finished on $(date)"`
 	if $options["id"] != nil
-		`curl -X POST "https://gbol5.de/ngs_runs/#{id}/import?results_path=#{$options["output"]}#{job_title}_out.zip" -u "external_user:K25#+95=@qmVgA5K"`
-		#{}`curl -d "#{$options["output"]}#{job_title}_out.zip" -X POST "https://gbol5.de/ngs_runs/#{$options["id"]}/import" -u "external_user:K25#+95=@qmVgA5K"`
+		`curl -X POST "https://gbol5.de/ngs_runs/#{id}/import?results_path=#{$options["output"]}#{job_title}_out.zip" -u "external_user:#{ENV_VAR}"`
 	end
 rescue => exception
 	File.open("#{$user_output_dir}/#{job_title}_stderr.txt", "a+") do |out|
 		out.puts "===\nReason for abort:"
 		out.puts exception.backtrace
 	end
-	`/data/data2/lara/send_telegram.sh "An error occurred."`
 	raise exception
 end
